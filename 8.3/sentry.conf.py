@@ -136,8 +136,26 @@ SENTRY_CACHE = 'sentry.cache.redis.RedisCache'
 # information on configuring your queue broker and workers. Sentry relies
 # on a Python framework called Celery to manage queues.
 
-CELERY_ALWAYS_EAGER = False
-BROKER_URL = 'redis://' + redis + ':' + redis_port + '/' + redis_db
+rabbitmq = os.environ.get('SENTRY_RABBITMQ_HOST') or (os.environ.get('RABBITMQ_PORT_5672_TCP_ADDR') and 'rabbitmq')
+
+if rabbitmq:
+    BROKER_URL = (
+        'amqp://' + (
+            os.environ.get('SENTRY_RABBITMQ_USERNAME')
+            or os.environ.get('RABBITMQ_ENV_RABBITMQ_DEFAULT_USER')
+            or 'guest'
+        ) + ':' + (
+            os.environ.get('SENTRY_RABBITMQ_PASSWORD')
+            or os.environ.get('RABBITMQ_ENV_RABBITMQ_DEFAULT_PASS')
+            or 'guest'
+        ) + '@' + rabbitmq + '/' + (
+            os.environ.get('SENTRY_RABBITMQ_VHOST')
+            or os.environ.get('RABBITMQ_ENV_RABBITMQ_DEFAULT_VHOST')
+            or '/'
+        )
+    )
+else:
+    BROKER_URL = 'redis://' + redis + ':' + redis_port + '/' + redis_db
 
 ###############
 # Rate Limits #
